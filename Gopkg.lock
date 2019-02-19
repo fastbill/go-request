@@ -15,7 +15,6 @@
   packages = ["."]
   pruneopts = ""
   revision = "c5d9a242884fb147614996146e6e8f5ec0cdc165"
-  source = "git@github.com:fastbill/go-httperrors.git"
   version = "v1.0.0"
 
 [[projects]]
