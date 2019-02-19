@@ -4,7 +4,6 @@
 [[constraint]]
   name = "github.com/fastbill/go-httperrors"
   version = "^1.0.0"
-  source = "git@github.com:fastbill/go-httperrors.git"
 
 [[constraint]]
   name = "github.com/pkg/errors"
