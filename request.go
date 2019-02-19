@@ -49,7 +49,7 @@ type Params struct {
 }
 
 // Do executes the request as specified in the request params
-// The reponse body will be parsed into the provided struct
+// The response body will be parsed into the provided struct
 func Do(params Params, responseBody interface{}) (returnErr error) {
 	req, err := createRequest(params)
 	if err != nil {

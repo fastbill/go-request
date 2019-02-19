@@ -3,7 +3,7 @@
 > An opinionated but extremely easy to use HTTP request client for Go to make JSON request and retrieve the results
 
 ## Description
-With this request package you just need to define the structs that correspond to the JSON request and response body. Together with the parameters like URL, method and headers you can directly execute a request with `Do`. If the request body is not of type `io.Reader` already it will be encoded as JSON. Also the response will be decoded back into the struct you provided for the result. Request and reponse body are optional which means they can be `nil`.  
+With this request package you just need to define the structs that correspond to the JSON request and response body. Together with the parameters like URL, method and headers you can directly execute a request with `Do`. If the request body is not of type `io.Reader` already it will be encoded as JSON. Also the response will be decoded back into the struct you provided for the result. Request and response body are optional which means they can be `nil`.  
 If the request could be made but the response status code was not `2xx` an error of the type `HTTPError` from the package [httperrors](https://github.com/fastbill/go-httperrors) will be returned.
 
 ## Example
