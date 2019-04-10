@@ -18,10 +18,10 @@ type Output struct {
 	ResponseValue string `json:"responseValue"`
 }
 
-params := Params{
+params := request.Params{
     URL:    "https://example.com",
     Method: "POST",
-    Headers: map[string]string{"my-header":"value", "another-header":"value2"}
+    Headers: map[string]string{"my-header":"value", "another-header":"value2"},
     Body:   Input{RequestValue: "someValueIn"},
     Query: map[string]string{"key": "value"},
 }
@@ -48,3 +48,60 @@ err := request.Post("http://example.com", Input{RequestValue: "someValueIn"}, re
 ## Streaming
 The package allows the request body (`Body` property of `Params`) to be of type `io.Reader`. That way you can pass on request bodies to other services without parsing them.
 
+## Why?
+To understand why this package was created have a look at the code that would be the native equivalent of the code shown in the example above.
+```go
+import (
+	"bytes"
+	"encoding/json"
+	"net/http"
+	"time"
+)
+
+type Input struct {
+	RequestValue string `json:"requestValue"`
+}
+
+type Output struct {
+	ResponseValue string `json:"responseValue"`
+}
+
+buf := &bytes.Buffer{}
+err := json.NewEncoder(buf).Encode(&Input{RequestValue: "someValueIn"})
+if err != nil {
+    return err
+}
+
+req, err := http.NewRequest("POST", url, buf)
+if err != nil {
+    return err
+}
+
+req.Header.Set("Accept", "application/json")
+req.Header.Set("Content-Type", "application/json")
+req.Header.Set("my-header", "value")
+req.Header.Set("another-header", "value2")
+
+q := req.URL.Query()
+q.Add("key", "value")
+req.URL.RawQuery = q.Encode()
+
+client := &http.Client{
+    Timeout: 30 * time.Second,
+    CheckRedirect: func(req *http.Request, via []*http.Request) error {
+        return http.ErrUseLastResponse
+    },
+}
+
+res, err := client.Do(req)
+if err != nil {
+    return err
+}
+defer func() {
+    res.Body.Close()
+}()
+
+result := &Output{}
+err = json.NewDecoder(res.Body).Decode(result)
+```
+This shows the request package saves a lot of boilerplate code. instead of around 35 lines we just write the 9 lines shown in the example. That way the code is much easier to read and maintain.
