@@ -267,7 +267,7 @@ func TestDoOtherErrors(t *testing.T) {
 	})
 
 	t.Run("request cannot be sent", func(t *testing.T) {
-		params := Params{URL: "\n"}
+		params := Params{URL: "http://"}
 		err := Do(params, nil)
 		if assert.Error(t, err) {
 			assert.Contains(t, err.Error(), "failed to send request")
