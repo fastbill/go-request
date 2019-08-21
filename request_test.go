@@ -39,12 +39,14 @@ func TestGetClient(t *testing.T) {
 			w.WriteHeader(http.StatusSeeOther)
 		}))
 		stdClient := http.Client{}
-		_, err := stdClient.Get(ts.URL)
+		r, err := stdClient.Get(ts.URL)
 		assert.Error(t, err)
+		r.Body.Close()
 
 		client := GetClient()
 		res, err := client.Get(ts.URL)
 		assert.Equal(t, "/////", res.Header.Get("Location"))
+		res.Body.Close()
 		assert.NoError(t, err)
 	})
 }
@@ -61,7 +63,8 @@ func TestDoSuccessful(t *testing.T) {
 			body, _ := ioutil.ReadAll(r.Body)
 			assert.Equal(t, `{"requestValue":"someValueIn"}`+"\n", string(body))
 			assert.Equal(t, r.Method, "POST")
-			w.Write([]byte(`{"responseValue":"someValueOut"}`))
+			_, err := w.Write([]byte(`{"responseValue":"someValueOut"}`))
+			assert.NoError(t, err)
 		}))
 		defer ts.Close()
 
@@ -100,7 +103,8 @@ func TestDoSuccessful(t *testing.T) {
 	t.Run("no request body", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, r.Method, "POST")
-			w.Write([]byte(`{"responseValue":"someValueOut"}`))
+			_, err := w.Write([]byte(`{"responseValue":"someValueOut"}`))
+			assert.NoError(t, err)
 		}))
 		defer ts.Close()
 
@@ -157,7 +161,8 @@ func TestDoSuccessful(t *testing.T) {
 			body, _ := ioutil.ReadAll(r.Body)
 			assert.Equal(t, `{"requestValue":"someValueIn"}`, string(body))
 			assert.Equal(t, r.Method, "POST")
-			w.Write([]byte(`{"responseValue":"someValueOut"}`))
+			_, err := w.Write([]byte(`{"responseValue":"someValueOut"}`))
+			assert.NoError(t, err)
 		}))
 		defer ts.Close()
 
@@ -231,7 +236,8 @@ func TestDoHTTPErrors(t *testing.T) {
 	t.Run("non 2xx response with body", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("some error message"))
+			_, err := w.Write([]byte("some error message"))
+			assert.NoError(t, err)
 		}))
 		defer ts.Close()
 
@@ -278,7 +284,8 @@ func TestDoOtherErrors(t *testing.T) {
 func TestGet(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, r.Method, "GET")
-		w.Write([]byte(`{"responseValue":"someValueOut"}`))
+		_, err := w.Write([]byte(`{"responseValue":"someValueOut"}`))
+		assert.NoError(t, err)
 	}))
 	defer ts.Close()
 
@@ -293,7 +300,8 @@ func TestPost(t *testing.T) {
 		body, _ := ioutil.ReadAll(r.Body)
 		assert.Equal(t, `{"requestValue":"someValueIn"}`+"\n", string(body))
 		assert.Equal(t, r.Method, "POST")
-		w.Write([]byte(`{"responseValue":"someValueOut"}`))
+		_, err := w.Write([]byte(`{"responseValue":"someValueOut"}`))
+		assert.NoError(t, err)
 	}))
 	defer ts.Close()
 
@@ -307,7 +315,10 @@ func ExampleDo() {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, _ := ioutil.ReadAll(r.Body)
 		fmt.Println(string(body))
-		w.Write([]byte(`{"responseValue":"someValueOut"}`))
+		_, err := w.Write([]byte(`{"responseValue":"someValueOut"}`))
+		if err != nil {
+			panic(err)
+		}
 	}))
 	defer ts.Close()
 
