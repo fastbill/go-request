@@ -8,7 +8,7 @@ If the request could be made but the response status code was not `2xx` an error
 
 ## Example
 ```go
-import "github.com/fastbill/go-request"
+import "github.com/fastbill/go-request/v2"
 
 type Input struct {
 	RequestValue string `json:"requestValue"`
