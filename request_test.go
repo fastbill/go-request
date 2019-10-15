@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fastbill/go-httperrors"
+	"github.com/fastbill/go-httperrors/v2"
 	"github.com/stretchr/testify/assert"
 )
 
