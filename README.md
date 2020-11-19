@@ -8,7 +8,10 @@ If the request could be made but the response status code was not `2xx` an error
 
 ## Example
 ```go
-import "github.com/fastbill/go-request/v2"
+import (
+    "net/http"
+    "github.com/fastbill/go-request/v2"
+)
 
 type Input struct {
 	RequestValue string `json:"requestValue"`
@@ -20,7 +23,7 @@ type Output struct {
 
 params := request.Params{
     URL:    "https://example.com",
-    Method: "POST",
+    Method: http.MethodPost,
     Headers: map[string]string{"my-header":"value", "another-header":"value2"},
     Body:   Input{RequestValue: "someValueIn"},
     Query: map[string]string{"key": "value"},
@@ -80,7 +83,7 @@ if err != nil {
     return err
 }
 
-req, err := http.NewRequest("POST", url, buf)
+req, err := http.NewRequest(http.MethodPost, url, buf)
 if err != nil {
     return err
 }

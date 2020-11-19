@@ -144,12 +144,12 @@ func createRequest(params Params) (*http.Request, error) {
 
 // Get is a convience wrapper for "Do" to execute GET requests
 func Get(url string, responseBody interface{}) error {
-	return Do(Params{Method: "GET", URL: url}, responseBody)
+	return Do(Params{Method: http.MethodGet, URL: url}, responseBody)
 }
 
 // Post is a convience wrapper for "Do" to execute POST requests
 func Post(url string, requestBody interface{}, responseBody interface{}) error {
-	return Do(Params{Method: "POST", URL: url, Body: requestBody}, responseBody)
+	return Do(Params{Method: http.MethodPost, URL: url, Body: requestBody}, responseBody)
 }
 
 func convertToReader(body interface{}) (io.Reader, error) {

@@ -62,7 +62,7 @@ func TestDoSuccessful(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			body, _ := ioutil.ReadAll(r.Body)
 			assert.Equal(t, `{"requestValue":"someValueIn"}`+"\n", string(body))
-			assert.Equal(t, r.Method, "POST")
+			assert.Equal(t, r.Method, http.MethodPost)
 			w.WriteHeader(http.StatusCreated)
 			_, err := w.Write([]byte(`{"responseValue":"someValueOut"}`))
 			assert.NoError(t, err)
@@ -71,7 +71,7 @@ func TestDoSuccessful(t *testing.T) {
 
 		params := Params{
 			URL:                  ts.URL,
-			Method:               "POST",
+			Method:               http.MethodPost,
 			Body:                 Input{RequestValue: "someValueIn"},
 			ExpectedResponseCode: http.StatusCreated,
 		}
@@ -91,7 +91,7 @@ func TestDoSuccessful(t *testing.T) {
 
 		params := Params{
 			URL:    ts.URL + "?beenhere=before",
-			Method: "POST",
+			Method: http.MethodPost,
 			Query: map[string]string{
 				"testKey": "testValue",
 				"öä":      "%&/",
@@ -104,7 +104,7 @@ func TestDoSuccessful(t *testing.T) {
 
 	t.Run("no request body", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			assert.Equal(t, r.Method, "POST")
+			assert.Equal(t, r.Method, http.MethodPost)
 			_, err := w.Write([]byte(`{"responseValue":"someValueOut"}`))
 			assert.NoError(t, err)
 		}))
@@ -112,7 +112,7 @@ func TestDoSuccessful(t *testing.T) {
 
 		params := Params{
 			URL:    ts.URL,
-			Method: "POST",
+			Method: http.MethodPost,
 		}
 
 		result := &Output{}
@@ -123,14 +123,14 @@ func TestDoSuccessful(t *testing.T) {
 
 	t.Run("no response body and no request body", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			assert.Equal(t, r.Method, "GET")
+			assert.Equal(t, r.Method, http.MethodGet)
 			w.WriteHeader(http.StatusOK)
 		}))
 		defer ts.Close()
 
 		params := Params{
 			URL:    ts.URL,
-			Method: "GET",
+			Method: http.MethodGet,
 			Body:   nil,
 		}
 
@@ -147,7 +147,7 @@ func TestDoSuccessful(t *testing.T) {
 
 		params := Params{
 			URL:     ts.URL,
-			Method:  "GET",
+			Method:  http.MethodGet,
 			Body:    nil,
 			Timeout: 1 * time.Millisecond,
 		}
@@ -162,7 +162,7 @@ func TestDoSuccessful(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			body, _ := ioutil.ReadAll(r.Body)
 			assert.Equal(t, `{"requestValue":"someValueIn"}`, string(body))
-			assert.Equal(t, r.Method, "POST")
+			assert.Equal(t, r.Method, http.MethodPost)
 			_, err := w.Write([]byte(`{"responseValue":"someValueOut"}`))
 			assert.NoError(t, err)
 		}))
@@ -170,7 +170,7 @@ func TestDoSuccessful(t *testing.T) {
 
 		params := Params{
 			URL:    ts.URL,
-			Method: "POST",
+			Method: http.MethodPost,
 			Body:   strings.NewReader(`{"requestValue":"someValueIn"}`),
 		}
 
@@ -224,7 +224,7 @@ func TestDoHTTPErrors(t *testing.T) {
 
 		params := Params{
 			URL:    ts.URL,
-			Method: "GET",
+			Method: http.MethodGet,
 		}
 
 		err := Do(params, nil)
@@ -245,7 +245,7 @@ func TestDoHTTPErrors(t *testing.T) {
 
 		params := Params{
 			URL:    ts.URL,
-			Method: "GET",
+			Method: http.MethodGet,
 		}
 
 		err := Do(params, nil)
@@ -320,7 +320,7 @@ func TestDoWithStringResponse(t *testing.T) {
 
 func TestGet(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, r.Method, "GET")
+		assert.Equal(t, r.Method, http.MethodGet)
 		_, err := w.Write([]byte(`{"responseValue":"someValueOut"}`))
 		assert.NoError(t, err)
 	}))
@@ -336,7 +336,7 @@ func TestPost(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, _ := ioutil.ReadAll(r.Body)
 		assert.Equal(t, `{"requestValue":"someValueIn"}`+"\n", string(body))
-		assert.Equal(t, r.Method, "POST")
+		assert.Equal(t, r.Method, http.MethodPost)
 		_, err := w.Write([]byte(`{"responseValue":"someValueOut"}`))
 		assert.NoError(t, err)
 	}))
@@ -361,7 +361,7 @@ func ExampleDo() {
 
 	params := Params{
 		URL:    ts.URL,
-		Method: "POST",
+		Method: http.MethodPost,
 		Body:   Input{RequestValue: "someValueIn"},
 	}
 
@@ -386,7 +386,7 @@ func ExampleDoWithStringResponse() {
 
 	params := Params{
 		URL:    ts.URL,
-		Method: "POST",
+		Method: http.MethodPost,
 	}
 
 	result, err := DoWithStringResponse(params)
