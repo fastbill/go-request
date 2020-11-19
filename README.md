@@ -8,7 +8,10 @@ If the request could be made but the response status code was not `2xx` an error
 
 ## Example
 ```go
-import "github.com/fastbill/go-request/v2"
+import (
+    "net/http"
+    "github.com/fastbill/go-request/v2"
+)
 
 type Input struct {
 	RequestValue string `json:"requestValue"`
@@ -20,14 +23,22 @@ type Output struct {
 
 params := request.Params{
     URL:    "https://example.com",
-    Method: "POST",
+    Method: http.MethodPost,
     Headers: map[string]string{"my-header":"value", "another-header":"value2"},
     Body:   Input{RequestValue: "someValueIn"},
     Query: map[string]string{"key": "value"},
+    Timeout: 10 * time.Second,
+    ExpectedResponseCode: 201,
 }
 
 result := &Output{}
 err := request.Do(params, result)
+```
+All parameters besides the `URL` and the `Method` are optional and can be omitted.
+
+If you want to retrieve the response body as a string, e.g. for debugging or testing purposes, you can use `DoWithStringResponse` instead.
+```go
+result, err := request.DoWithStringResponse(params)
 ```
 
 ## Convenience wrappers
@@ -38,11 +49,11 @@ err := request.Post("http://example.com", Input{RequestValue: "someValueIn"}, re
 ```
 
 ## Defaults
-* All `2xx` response codes are treated as success, all other codes lead to an error being returned
+* All `2xx` response codes are treated as success, all other codes lead to an error being returned, if you want to check for a specific response code set `ExpectedResponseCode` in the parameters
 * If an HTTPError is returned it contains the response body as message if there was one
 * The request package takes care of closing the response body after sending the request
 * The http client does not follow redirects
-* The http client timeout is set to 30 seconds
+* The http client timeout is set to 30 seconds, use the `Timeout` parameter in case you want to define a different timeout for one of the requests
 * `Accept` and `Content-Type` request header are set to `application/json` and can be overwritten via the Headers parameter
 
 ## Streaming
@@ -72,7 +83,7 @@ if err != nil {
     return err
 }
 
-req, err := http.NewRequest("POST", url, buf)
+req, err := http.NewRequest(http.MethodPost, url, buf)
 if err != nil {
     return err
 }
@@ -98,7 +109,8 @@ if err != nil {
     return err
 }
 defer func() {
-    res.Body.Close()
+    err = res.Body.Close()
+    // handle err somehow
 }()
 
 result := &Output{}
