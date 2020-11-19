@@ -13,8 +13,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// client is the global client instance.
-var client *http.Client
+// cachedClient is the global client instance.
+var cachedClient *http.Client
 
 // defaultTimeout is the timeout applied if there is none provided.
 var defaultTimeout = 30 * time.Second
@@ -22,11 +22,11 @@ var defaultTimeout = 30 * time.Second
 // getCachedClient returns the client instance or creates it if it did not exist.
 // The client does not follow redirects and has a timeout of defaultTimeout.
 func getCachedClient() *http.Client {
-	if client == nil {
-		client = GetClient()
+	if cachedClient == nil {
+		cachedClient = GetClient()
 	}
 
-	return client
+	return cachedClient
 }
 
 // GetClient returns an http client that does not follow redirects and has a timeout of defaultTimeout.
@@ -58,7 +58,7 @@ func Do(params Params, responseBody interface{}) (returnErr error) {
 		return err
 	}
 
-	client := getClient(params.Timeout)
+	client := selectClient(params.Timeout)
 	res, err := client.Do(req)
 	if err != nil {
 		return errors.Wrap(err, "failed to send request")
@@ -90,7 +90,7 @@ func DoWithStringResponse(params Params) (result string, returnErr error) {
 		return "", err
 	}
 
-	client := getClient(params.Timeout)
+	client := selectClient(params.Timeout)
 	res, err := client.Do(req)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to send request")
@@ -171,9 +171,9 @@ func convertToReader(body interface{}) (io.Reader, error) {
 	return buffer, nil
 }
 
-func getClient(timeout time.Duration) *http.Client {
+func selectClient(timeout time.Duration) *http.Client {
 	if timeout != 0 {
-		client = GetClient()
+		client := GetClient()
 		client.Timeout = timeout
 		return client
 	}

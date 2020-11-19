@@ -41,12 +41,12 @@ func TestGetClient(t *testing.T) {
 		stdClient := http.Client{}
 		r, err := stdClient.Get(ts.URL)
 		assert.Error(t, err)
-		r.Body.Close()
+		assert.NoError(t, r.Body.Close())
 
 		client := GetClient()
 		res, err := client.Get(ts.URL)
 		assert.Equal(t, "/////", res.Header.Get("Location"))
-		res.Body.Close()
+		assert.NoError(t, res.Body.Close())
 		assert.NoError(t, err)
 	})
 }
