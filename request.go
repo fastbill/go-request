@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/fastbill/go-httperrors/v2"
-	"github.com/pkg/errors"
 )
 
 // cachedClient is the global client instance.
@@ -55,13 +54,13 @@ type Params struct {
 func Do(params Params, responseBody interface{}) (returnErr error) {
 	req, err := createRequest(params)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create request: %w", err)
 	}
 
 	client := selectClient(params.Timeout)
 	res, err := client.Do(req)
 	if err != nil {
-		return errors.Wrap(err, "failed to send request")
+		return fmt.Errorf("failed to send request: %w", err)
 	}
 
 	defer func() {
@@ -93,7 +92,7 @@ func DoWithStringResponse(params Params) (result string, returnErr error) {
 	client := selectClient(params.Timeout)
 	res, err := client.Do(req)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to send request")
+		return "", fmt.Errorf("failed to send request: %w", err)
 	}
 
 	defer func() {
@@ -123,7 +122,7 @@ func createRequest(params Params) (*http.Request, error) {
 
 	req, err := http.NewRequest(params.Method, params.URL, reader)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create request")
+		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
@@ -165,7 +164,7 @@ func convertToReader(body interface{}) (io.Reader, error) {
 	buffer := &bytes.Buffer{}
 	err := json.NewEncoder(buffer).Encode(body)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse request body to json")
+		return nil, fmt.Errorf("failed to parse request body to json: %w", err)
 	}
 
 	return buffer, nil
