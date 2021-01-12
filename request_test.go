@@ -154,7 +154,7 @@ func TestDoSuccessful(t *testing.T) {
 
 		err := Do(params, nil)
 		if assert.Error(t, err) {
-			assert.Contains(t, err.Error(), "request canceled")
+			assert.Contains(t, err.Error(), "Client.Timeout exceeded")
 		}
 	})
 
