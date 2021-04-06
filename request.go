@@ -114,6 +114,37 @@ func DoWithStringResponse(params Params) (result string, returnErr error) {
 	return string(bodyBytes), nil
 }
 
+// DoWithCustomClient is the same as Do but will make the request using the
+// supplied http.Client instead of the cachedClient.
+func DoWithCustomClient(params Params, responseBody interface{}, client *http.Client) (returnErr error) {
+	req, err := createRequest(params)
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	res, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to send request: %w", err)
+	}
+
+	defer func() {
+		if cErr := res.Body.Close(); cErr != nil && returnErr == nil {
+			returnErr = cErr
+		}
+	}()
+
+	err = checkResponseCode(res, params.ExpectedResponseCode)
+	if err != nil {
+		return err
+	}
+
+	if responseBody == nil {
+		return nil
+	}
+
+	return json.NewDecoder(res.Body).Decode(responseBody)
+}
+
 func createRequest(params Params) (*http.Request, error) {
 	reader, err := convertToReader(params.Body)
 	if err != nil {
