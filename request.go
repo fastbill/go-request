@@ -141,12 +141,12 @@ func createRequest(params Params) (*http.Request, error) {
 	return req, nil
 }
 
-// Get is a convience wrapper for "Do" to execute GET requests
+// Get is a convenience wrapper for "Do" to execute GET requests
 func Get(url string, responseBody interface{}) error {
 	return Do(Params{Method: http.MethodGet, URL: url}, responseBody)
 }
 
-// Post is a convience wrapper for "Do" to execute POST requests
+// Post is a convenience wrapper for "Do" to execute POST requests
 func Post(url string, requestBody interface{}, responseBody interface{}) error {
 	return Do(Params{Method: http.MethodPost, URL: url, Body: requestBody}, responseBody)
 }
