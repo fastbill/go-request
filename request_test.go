@@ -45,9 +45,9 @@ func TestGetClient(t *testing.T) {
 
 		client := GetClient()
 		res, err := client.Get(ts.URL)
+		assert.NoError(t, err)
 		assert.Equal(t, "/////", res.Header.Get("Location"))
 		assert.NoError(t, res.Body.Close())
-		assert.NoError(t, err)
 	})
 }
 func TestGetCachedClient(t *testing.T) {
