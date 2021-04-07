@@ -333,14 +333,14 @@ func TestDoWithCustomClient(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	}))
 
-	u, err := url.Parse(ts.URL)
-	require.NoError(t, err)
 	params := Params{
-		URL: u.String(),
+		URL: ts.URL,
 	}
 	err = DoWithCustomClient(params, nil, customClient)
 	require.NoError(t, err)
 
+	u, err := url.Parse(ts.URL)
+	require.NoError(t, err)
 	require.Equal(t, "foo=bar", jar.Cookies(u)[0].String())
 }
 
