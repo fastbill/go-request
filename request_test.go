@@ -4,13 +4,16 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/cookiejar"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/fastbill/go-httperrors/v2"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type Input struct {
@@ -45,9 +48,9 @@ func TestGetClient(t *testing.T) {
 
 		client := GetClient()
 		res, err := client.Get(ts.URL)
+		assert.NoError(t, err)
 		assert.Equal(t, "/////", res.Header.Get("Location"))
 		assert.NoError(t, res.Body.Close())
-		assert.NoError(t, err)
 	})
 }
 func TestGetCachedClient(t *testing.T) {
@@ -316,6 +319,29 @@ func TestDoWithStringResponse(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, response, result)
 	})
+}
+
+func TestDoWithCustomClient(t *testing.T) {
+	customClient := GetClient()
+
+	jar, err := cookiejar.New(nil)
+	require.NoError(t, err)
+	customClient.Jar = jar
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Set-Cookie", "foo=bar")
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	params := Params{
+		URL: ts.URL,
+	}
+	err = DoWithCustomClient(params, nil, customClient)
+	require.NoError(t, err)
+
+	u, err := url.Parse(ts.URL)
+	require.NoError(t, err)
+	require.Equal(t, "foo=bar", jar.Cookies(u)[0].String())
 }
 
 func TestGet(t *testing.T) {
