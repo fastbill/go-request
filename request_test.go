@@ -109,6 +109,34 @@ func TestDoSuccessful(t *testing.T) {
 		assert.Equal(t, map[string]string{"responseValue": "someValueOut"}, result)
 	})
 
+	t.Run("slice as request and response", func(t *testing.T) {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			body, _ := ioutil.ReadAll(r.Body)
+			assert.Equal(t, `[{"requestValue":"someValueIn"}]`+"\n", string(body))
+			assert.Equal(t, r.Method, http.MethodPost)
+			w.WriteHeader(http.StatusCreated)
+			_, err := w.Write([]byte(`[{"key1": "value1"}, {"key2": "value2"}]`))
+			assert.NoError(t, err)
+		}))
+		defer ts.Close()
+
+		params := Params{
+			URL:                  ts.URL,
+			Method:               http.MethodPost,
+			Body:                 []map[string]interface{}{{"requestValue": "someValueIn"}},
+			ExpectedResponseCode: http.StatusCreated,
+		}
+
+		result := []map[string]interface{}{}
+		err := Do(params, &result)
+		assert.NoError(t, err)
+		expected := []map[string]interface{}{
+			{"key1": "value1"},
+			{"key2": "value2"},
+		}
+		assert.Equal(t, expected, result)
+	})
+
 	t.Run("with query", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, r.URL.RawQuery, `beenhere=before&testKey=testValue&%C3%B6%C3%A4=%25%26%2F`)
