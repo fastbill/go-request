@@ -3,8 +3,9 @@
 > An opinionated but extremely easy to use HTTP request client for Go to make JSON request and retrieve the results
 
 ## Description
-With this request package you just need to define the structs that correspond to the JSON request and response body. Together with the parameters like URL, method and headers you can directly execute a request with `Do`. If the request body is not of type `io.Reader` already it will be encoded as JSON. Also the response will be decoded back into the struct you provided for the result. Request and response body are optional which means they can be `nil`.  
-If the request could be made but the response status code was not `2xx` an error of the type `HTTPError` from the package [httperrors](https://github.com/fastbill/go-httperrors) will be returned.
+With this request package you just need to define the structs or maps/slices that correspond to the JSON request and response body. Together with the parameters like URL, method and headers you can directly execute a request with `Do`. If the request body is not of type `io.Reader` already, it will be encoded as JSON. Also the response will be decoded back into the struct or map/slice you provided for the result. Request and response body are optional which means they can be `nil`.
+
+If the request could be made but the response status code was not `2xx` an error of the type `HTTPError` from the package [httperrors](https://github.com/fastbill/go-httperrors) will be returned. The same happens if you specified an `ExpectedResponseCode` and that one was not matched by the actual response.
 
 ## Example
 ```go
@@ -55,6 +56,7 @@ err := request.Post("http://example.com", Input{RequestValue: "someValueIn"}, re
 * The http client does not follow redirects
 * The http client timeout is set to 30 seconds, use the `Timeout` parameter in case you want to define a different timeout for one of the requests
 * `Accept` and `Content-Type` request header are set to `application/json` and can be overwritten via the Headers parameter
+* The parameters `Headers` and `Query` accept a simple `map[string]string`. If you want to pass `http.Header` or `url.Values` instead, wrap them in the provided `request.ReformatMap` helper function.
 
 ## Streaming
 The package allows the request body (`Body` property of `Params`) to be of type `io.Reader`. That way you can pass on request bodies to other services without parsing them.
@@ -116,4 +118,4 @@ defer func() {
 result := &Output{}
 err = json.NewDecoder(res.Body).Decode(result)
 ```
-This shows the request package saves a lot of boilerplate code. instead of around 35 lines we just write the 9 lines shown in the example. That way the code is much easier to read and maintain.
+This shows the request package saves a lot of boilerplate code. Instead of around 35 lines we just write the 9 lines shown in the example. That way the code is much easier to read and maintain.
