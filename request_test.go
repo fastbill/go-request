@@ -85,6 +85,30 @@ func TestDoSuccessful(t *testing.T) {
 		assert.Equal(t, "someValueOut", result.ResponseValue)
 	})
 
+	t.Run("map as request and response", func(t *testing.T) {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			body, _ := ioutil.ReadAll(r.Body)
+			assert.Equal(t, `{"requestValue":"someValueIn"}`+"\n", string(body))
+			assert.Equal(t, r.Method, http.MethodPost)
+			w.WriteHeader(http.StatusCreated)
+			_, err := w.Write([]byte(`{"responseValue":"someValueOut"}`))
+			assert.NoError(t, err)
+		}))
+		defer ts.Close()
+
+		params := Params{
+			URL:                  ts.URL,
+			Method:               http.MethodPost,
+			Body:                 map[string]string{"requestValue": "someValueIn"},
+			ExpectedResponseCode: http.StatusCreated,
+		}
+
+		result := map[string]string{}
+		err := Do(params, &result)
+		assert.NoError(t, err)
+		assert.Equal(t, map[string]string{"responseValue": "someValueOut"}, result)
+	})
+
 	t.Run("with query", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, r.URL.RawQuery, `beenhere=before&testKey=testValue&%C3%B6%C3%A4=%25%26%2F`)
@@ -372,6 +396,42 @@ func TestPost(t *testing.T) {
 	err := Post(ts.URL, Input{RequestValue: "someValueIn"}, result)
 	assert.NoError(t, err)
 	assert.Equal(t, "someValueOut", result.ResponseValue)
+}
+
+func TestReformatMap(t *testing.T) {
+	called := false
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		called = true
+
+		queryString := r.URL.RawQuery
+		actual := strings.SplitN(queryString, "&", -1)
+		expected := []string{"queryParam1=valueA%2CvalueB%2CvalueC", "queryParam2=value%C3%9C%C3%84%C3%96"}
+		assert.ElementsMatch(t, expected, actual)
+
+		assert.Equal(t, "valueD,value/-Ä", r.Header.Get("header1"))
+		assert.Equal(t, "valueE", r.Header.Get("header2"))
+	}))
+	defer ts.Close()
+
+	query := url.Values{
+		"queryParam1": []string{"valueA", "valueB", "valueC"},
+		"queryParam2": []string{"valueÜÄÖ"},
+	}
+
+	headers := http.Header{
+		"header1": []string{"valueD", "value/-Ä"},
+		"header2": []string{"valueE"},
+	}
+
+	params := Params{
+		URL:     ts.URL,
+		Headers: ReformatMap(headers),
+		Query:   ReformatMap(query),
+	}
+
+	err := Do(params, nil)
+	assert.NoError(t, err)
+	assert.True(t, called)
 }
 
 func ExampleDo() {

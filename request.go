@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/fastbill/go-httperrors/v2"
@@ -180,6 +181,18 @@ func Get(url string, responseBody interface{}) error {
 // Post is a convenience wrapper for "Do" to execute POST requests
 func Post(url string, requestBody interface{}, responseBody interface{}) error {
 	return Do(Params{Method: http.MethodPost, URL: url, Body: requestBody}, responseBody)
+}
+
+// ReformatMap converts map[string][]string to map[string]string by
+// converting the values to comma-separated strings.
+// The function can be used to make http.Header or url.Values compatible
+// with the request parameters.
+func ReformatMap(inputMap map[string][]string) map[string]string {
+	result := map[string]string{}
+	for key, values := range inputMap {
+		result[key] = strings.Join(values, ",")
+	}
+	return result
 }
 
 func convertToReader(body interface{}) (io.Reader, error) {
