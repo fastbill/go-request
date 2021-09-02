@@ -37,7 +37,26 @@ err := request.Do(params, result)
 ```
 All parameters besides the `URL` and the `Method` are optional and can be omitted.
 
-If you want to retrieve the response body as a string, e.g. for debugging or testing purposes, you can use `DoWithStringResponse` instead.
+### Accessing the response headers
+If you need access to the headers of the http response, you can initialize a header map and pass it as a third argument to `Do`.
+It will then be populated with the response headers that the server returns.
+
+```go
+responseHeaders := http.Header{}
+err := request.Do(params, result, responseHeaders)
+```
+
+### Using a custom http client
+If you want to supply a custom http client to use for the request, you can use `DoWithCustomClient`.
+The client needs to be of type `*http.Client`.
+
+```go
+err := request.DoWithCustomClient(params, result)
+```
+
+### Retrieving the response as a string
+If you want to retrieve the response body as a string, e.g. for debugging or testing purposes, you can use `DoWithStringResponse`.
+
 ```go
 result, err := request.DoWithStringResponse(params)
 ```
