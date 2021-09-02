@@ -85,6 +85,25 @@ func TestDoSuccessful(t *testing.T) {
 		assert.Equal(t, "someValueOut", result.ResponseValue)
 	})
 
+	t.Run("with response headers", func(t *testing.T) {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("SomeHeader1", "SomeHeaderValue1")
+			w.Header().Add("SomeHeader2", "SomeHeaderValue2")
+		}))
+		defer ts.Close()
+
+		params := Params{
+			URL: ts.URL,
+		}
+
+		responseHeaders := http.Header{}
+		err := Do(params, nil, responseHeaders)
+		assert.NoError(t, err)
+		assert.Len(t, responseHeaders, 4) // 2 custom headers + ContentLength + Date
+		assert.Equal(t, "SomeHeaderValue1", responseHeaders.Get("SomeHeader1"))
+		assert.Equal(t, "SomeHeaderValue2", responseHeaders.Get("SomeHeader2"))
+	})
+
 	t.Run("map as request and response", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			body, _ := ioutil.ReadAll(r.Body)

@@ -3,6 +3,7 @@ package request
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -50,9 +51,10 @@ type Params struct {
 	ExpectedResponseCode int
 }
 
-// Do executes the request as specified in the request params
-// The response body will be parsed into the provided struct
-func Do(params Params, responseBody interface{}) (returnErr error) {
+// Do executes the request as specified in the request params.
+// The response body will be parsed into the provided struct.
+// Optionally, the headers will be copied if a header map was provided.
+func Do(params Params, responseBody interface{}, responseHeaderArg ...http.Header) (returnErr error) {
 	req, err := createRequest(params)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
@@ -71,6 +73,11 @@ func Do(params Params, responseBody interface{}) (returnErr error) {
 	}()
 
 	err = checkResponseCode(res, params.ExpectedResponseCode)
+	if err != nil {
+		return err
+	}
+
+	err = populateResponseHeader(res, responseHeaderArg)
 	if err != nil {
 		return err
 	}
@@ -117,6 +124,8 @@ func DoWithStringResponse(params Params) (result string, returnErr error) {
 
 // DoWithCustomClient is the same as Do but will make the request using the
 // supplied http.Client instead of the cachedClient.
+// TODO client should become the first parameter in the next major update
+// so we can add the response headers at the end. They are currently not supported.
 func DoWithCustomClient(params Params, responseBody interface{}, client *http.Client) (returnErr error) {
 	req, err := createRequest(params)
 	if err != nil {
@@ -243,4 +252,21 @@ func checkResponseCode(res *http.Response, expectedResponseCode int) error {
 
 func isSuccessCode(statusCode int) bool {
 	return 200 <= statusCode && statusCode <= 299
+}
+
+func populateResponseHeader(res *http.Response, responseHeaderArg []http.Header) error {
+	if len(responseHeaderArg) == 0 { // go-staticcheck says no need to check for nil separately.
+		return nil
+	}
+
+	if len(responseHeaderArg) > 1 {
+		return errors.New("too many arguments supplied")
+	}
+
+	responseHeader := responseHeaderArg[0]
+	for key, value := range res.Header {
+		responseHeader[key] = value
+	}
+
+	return nil
 }
